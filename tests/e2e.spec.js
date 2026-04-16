@@ -4,6 +4,8 @@ const { _electron: electron } = require('playwright');
 const path = require('path');
 
 const MAIN_ENTRY = path.join(__dirname, '..', 'src', 'main', 'index.js');
+const WAIT = process.env.CI ? 2000 : 1000;
+const WAIT_SHORT = process.env.CI ? 600 : 200;
 
 /** @type {import('playwright').ElectronApplication} */
 let app;
@@ -222,7 +224,7 @@ test('progress bar reflects utilization percentage', async () => {
 
 test('percentage text animates to correct value', async () => {
   // Wait for animation to complete (800ms + margin)
-  await win.waitForTimeout(1000);
+  await win.waitForTimeout(WAIT);
   const pctText = await win.locator('#card-five_hour [data-pct]').textContent();
   // Should end at 42.5%
   expect(pctText).toBe('42.5%');
@@ -291,7 +293,7 @@ test('card gets critical class at 90%+', async () => {
     });
   }, { now });
 
-  await win.waitForTimeout(200);
+  await win.waitForTimeout(WAIT_SHORT);
 
   // Card should have critical class
   const card = win.locator('#card-five_hour');
@@ -303,7 +305,7 @@ test('card gets critical class at 90%+', async () => {
 });
 
 test('percentage text updates to 95% after animation', async () => {
-  await win.waitForTimeout(1000);
+  await win.waitForTimeout(WAIT);
   const pctText = await win.locator('#card-five_hour [data-pct]').textContent();
   expect(pctText).toBe('95.0%');
 });
@@ -343,7 +345,7 @@ test('shows "Limit reached" at 100% utilization', async () => {
     });
   }, { now });
 
-  await win.waitForTimeout(1000);
+  await win.waitForTimeout(WAIT);
   const etaText = await win.locator('#card-five_hour [data-eta]').textContent();
   expect(etaText).toBe('Limit reached');
 });
@@ -371,7 +373,7 @@ test('removes card when limit disappears from data', async () => {
     });
   }, { now });
 
-  await win.waitForTimeout(300);
+  await win.waitForTimeout(WAIT_SHORT);
   // seven_day card should be removed
   await expect(win.locator('#card-seven_day')).not.toBeVisible();
   // five_hour should still be there
@@ -440,7 +442,7 @@ test('footer shows "Updated just now" after fresh data', async () => {
     });
   }, { now });
 
-  await win.waitForTimeout(200);
+  await win.waitForTimeout(WAIT_SHORT);
   const status = await win.locator('#footer-status').textContent();
   expect(status).toMatch(/Updated (just now|\ds ago)/);
 });
