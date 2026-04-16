@@ -1,0 +1,15 @@
+{
+  "name": "claude-dash",
+  "version": "1.0.0",
+  "description": "Compact dashboard for monitoring Claude usage limits in real-time",
+  "main": "src/main/index.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "NODE_ENV=development electron ."
+  },
+  "devDependencies": {
+    "electron": "^33.0.0"
+  },
+  "author": "Claude Dash",
+  "license": "MIT"
+}
