@@ -2,8 +2,8 @@ const https = require('https');
 const { Notification } = require('electron');
 
 const USAGE_URL = 'https://api.anthropic.com/api/oauth/usage';
-const POLL_INTERVAL = 60_000;       // 60s normal
-const MAX_BACKOFF   = 10 * 60_000;  // 10min max on errors
+const POLL_INTERVAL = 5 * 60_000;   // 5min — endpoint allows ~5 req/token before 429
+const MAX_BACKOFF   = 15 * 60_000;  // 15min max on errors
 
 const LIMIT_LABELS = {
   five_hour: '5-Hour',
@@ -56,10 +56,17 @@ class UsageTracker {
 
       if (this.onUpdate) this.onUpdate(enriched);
     } catch (err) {
-      if (err.status === 401) {
+      // 401 or 429: refresh token (429 rate limit is per-token, new token resets it)
+      if (err.status === 401 || err.status === 429) {
         try {
           await this.auth.refreshTokens();
-          return this._poll(); // retry once
+          if (err.status === 429) {
+            // Don't retry immediately — wait before next poll with the fresh token
+            this._increaseBackoff(60_000);
+            if (this.onUpdate) this.onUpdate({ error: 'Rate limited, refreshed token. Retrying in 1m...' });
+            return;
+          }
+          return this._poll(); // 401: retry once with new token
         } catch {
           if (this.onUpdate) this.onUpdate({ error: 'auth_expired' });
           this.stop();
