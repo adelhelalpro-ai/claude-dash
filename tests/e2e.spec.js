@@ -80,7 +80,7 @@ test('connect button is visible and enabled', async () => {
 });
 
 test('login hint text is visible', async () => {
-  await expect(win.locator('.login-hint')).toHaveText('Opens Claude login in your browser');
+  await expect(win.locator('.login-hint')).toHaveText('Requires Claude Code installed and logged in');
 });
 
 test('login error is hidden by default', async () => {

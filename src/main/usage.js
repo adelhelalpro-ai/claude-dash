@@ -2,8 +2,8 @@ const https = require('https');
 const { Notification } = require('electron');
 
 const USAGE_URL = 'https://api.anthropic.com/api/oauth/usage';
-const POLL_INTERVAL = 30_000;       // 30s normal
-const MAX_BACKOFF   = 5 * 60_000;  // 5min max on errors
+const POLL_INTERVAL = 60_000;       // 60s normal
+const MAX_BACKOFF   = 10 * 60_000;  // 10min max on errors
 
 const LIMIT_LABELS = {
   five_hour: '5-Hour',
@@ -66,7 +66,7 @@ class UsageTracker {
           return;
         }
       }
-      this._increaseBackoff();
+      this._increaseBackoff(err.retryAfter);
       if (this.onUpdate) this.onUpdate({ error: err.message });
     }
   }
@@ -91,7 +91,13 @@ class UsageTracker {
           let body = '';
           res.on('data', (c) => (body += c));
           res.on('end', () => {
-            if (res.statusCode >= 400) {
+            if (res.statusCode === 429) {
+              const retryAfter = parseInt(res.headers['retry-after'] || '60', 10);
+              const err = new Error(`Rate limited, retry in ${retryAfter}s`);
+              err.status = 429;
+              err.retryAfter = retryAfter * 1000;
+              reject(err);
+            } else if (res.statusCode >= 400) {
               const err = new Error(`Usage API ${res.statusCode}`);
               err.status = res.statusCode;
               reject(err);
@@ -239,8 +245,10 @@ class UsageTracker {
     }
   }
 
-  _increaseBackoff() {
-    this.currentInterval = Math.min(this.currentInterval * 2, MAX_BACKOFF);
+  _increaseBackoff(retryAfterMs) {
+    this.currentInterval = retryAfterMs
+      ? Math.min(retryAfterMs, MAX_BACKOFF)
+      : Math.min(this.currentInterval * 2, MAX_BACKOFF);
     if (this.pollTimer) clearInterval(this.pollTimer);
     this.pollTimer = setInterval(() => this._poll(), this.currentInterval);
   }
