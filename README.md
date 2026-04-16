@@ -102,12 +102,11 @@ It shares tokens with Claude Code — both apps stay in sync. When you relaunch,
 - Exponential backoff with 15min ceiling on repeated errors
 - Shares tokens bidirectionally with Claude Code — both apps stay in sync
 
-**Compact always-on-top widget**
-- 360 x 520px frameless floating window
-- Dark glassmorphism with native macOS vibrancy
-- Smooth number animations and color-interpolated progress bars
-- Green to Yellow to Orange to Red as you approach limits
-- Critical state glow at 90%+ utilization
+**Two display modes**
+- **Full view** (360 x 520px): detailed cards with progress bars, reset times, ETA, and consumption rate
+- **Mini view** (280 x 120px): compact SVG ring gauges — one glance, zero reading. Toggle with a single click
+- Both modes: frameless, always-on-top, dark glassmorphism with native macOS vibrancy
+- Smooth number animations, color-interpolated progress (green to red), critical glow at 90%+
 
 **Native notifications**
 - macOS/Windows/Linux alerts at 80% and 95% thresholds

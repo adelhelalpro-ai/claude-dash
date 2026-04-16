@@ -611,3 +611,85 @@ html, body {
   background: var(--bg-card-hover);
   border-color: var(--accent);
 }
+
+/* ── Toggle view button ──────────────────────────────── */
+
+.ctrl-btn.toggle-view:hover {
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--accent);
+}
+
+.ctrl-btn.toggle-view.active {
+  color: var(--accent);
+}
+
+/* ── Mini View ───────────────────────────────────────── */
+
+#screen-mini {
+  padding: 6px 10px;
+  justify-content: center;
+}
+
+.mini-gauges {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.mini-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
+.mini-gauge svg {
+  filter: drop-shadow(0 0 6px var(--gauge-color, rgba(139,92,246,0.3)));
+  transition: filter 0.4s ease;
+}
+
+.mini-gauge-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.mini-gauge-pct {
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--text-primary);
+}
+
+.mini-gauge-eta {
+  font-size: 7.5px;
+  fill: var(--text-tertiary);
+}
+
+.mini-gauge-track {
+  stroke: rgba(255, 255, 255, 0.06);
+}
+
+.mini-gauge-fill {
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              stroke 0.5s ease;
+  stroke-linecap: round;
+}
+
+/* Mini title bar: narrower */
+.app.mini .title-bar {
+  height: 32px;
+  padding: 0 8px;
+}
+
+.app.mini .title-text {
+  font-size: 11px;
+}
+
+.app.mini .ctrl-btn {
+  width: 24px;
+  height: 24px;
+}

@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('claudeDash', {
   closeApp: () => ipcRenderer.invoke('close-app'),
   minimizeApp: () => ipcRenderer.invoke('minimize-app'),
   refreshUsage: () => ipcRenderer.invoke('refresh-usage'),
+  resizeWindow: (w, h) => ipcRenderer.invoke('resize-window', w, h),
 
   onAuthStatus: (callback) => {
     ipcRenderer.removeAllListeners('auth-status');

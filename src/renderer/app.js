@@ -22,10 +22,21 @@ const footerStatus = $('#footer-status');
 const btnRefresh = $('#btn-refresh');
 const errorOverlay = $('#error-overlay');
 const errorMessage = $('#error-message');
+const screenMini = $('#screen-mini');
+const miniGauges = $('#mini-gauges');
+const btnToggleView = $('#btn-toggle-view');
+const appEl = $('#app');
 
 // ── State ───────────────────────────────────────────────
 
 let currentLimits = {};
+let isMiniView = false;
+let lastUsageData = null;
+
+const FULL_WIDTH = 360;
+const FULL_HEIGHT = 520;
+const MINI_WIDTH = 280;
+const MINI_HEIGHT = 120;
 let animatedValues = {};
 
 // ── Init ────────────────────────────────────────────────
@@ -51,6 +62,8 @@ function setupControls() {
   btnConnect.addEventListener('click', handleConnect);
   $('#btn-logout').addEventListener('click', handleLogout);
   $('#btn-retry').addEventListener('click', handleRetry);
+
+  btnToggleView.addEventListener('click', toggleMiniView);
 
   btnRefresh.addEventListener('click', () => {
     btnRefresh.classList.add('spinning');
@@ -149,7 +162,14 @@ function resetLoginButton() {
 // ── Usage rendering ─────────────────────────────────────
 
 function renderUsage(data) {
+  lastUsageData = data;
   const { limits, extra_usage, timestamp } = data;
+
+  // Update mini view if active
+  if (isMiniView) {
+    renderMiniGauges(limits);
+    return;
+  }
 
   // Update footer
   footerStatus.textContent = `Updated ${formatAgo(timestamp)}`;
@@ -373,6 +393,77 @@ function startFooterTimer(timestamp) {
   footerInterval = setInterval(() => {
     footerStatus.textContent = `Updated ${formatAgo(timestamp)}`;
   }, 5000);
+}
+
+// ── Mini View ───────────────────────────────────────────
+
+const MINI_LABELS = {
+  five_hour: '5H',
+  seven_day: '7D',
+  seven_day_opus: 'OPUS',
+  seven_day_sonnet: 'SNNT',
+  seven_day_cowork: 'COWK',
+};
+
+function toggleMiniView() {
+  isMiniView = !isMiniView;
+  btnToggleView.classList.toggle('active', isMiniView);
+  appEl.classList.toggle('mini', isMiniView);
+
+  if (isMiniView) {
+    hide(screenDash);
+    show(screenMini);
+    window.claudeDash.resizeWindow(MINI_WIDTH, MINI_HEIGHT);
+    if (lastUsageData) renderMiniGauges(lastUsageData.limits);
+  } else {
+    hide(screenMini);
+    show(screenDash);
+    window.claudeDash.resizeWindow(FULL_WIDTH, FULL_HEIGHT);
+    if (lastUsageData) renderUsage(lastUsageData);
+  }
+}
+
+function renderMiniGauges(limits) {
+  const order = ['five_hour', 'seven_day', 'seven_day_opus', 'seven_day_sonnet', 'seven_day_cowork'];
+  const active = order.filter((k) => limits[k]);
+
+  miniGauges.innerHTML = active.map((key) => {
+    const l = limits[key];
+    const pct = l.utilization;
+    const color = getProgressColor(pct);
+    const label = MINI_LABELS[key];
+    const eta = formatMiniEta(l.estimatedTimeToLimit, pct);
+
+    // SVG ring gauge: radius 28, stroke 5, circumference = 2*PI*28 ≈ 175.9
+    const R = 28;
+    const STROKE = 5;
+    const CIRC = 2 * Math.PI * R;
+    const offset = CIRC * (1 - Math.min(pct, 100) / 100);
+
+    return `<div class="mini-gauge" style="--gauge-color: ${color}40">
+      <svg width="66" height="66" viewBox="0 0 66 66">
+        <circle cx="33" cy="33" r="${R}" fill="none" class="mini-gauge-track" stroke-width="${STROKE}"/>
+        <circle cx="33" cy="33" r="${R}" fill="none" class="mini-gauge-fill"
+          stroke="${color}" stroke-width="${STROKE}"
+          stroke-dasharray="${CIRC}" stroke-dashoffset="${offset}"
+          transform="rotate(-90 33 33)"/>
+        <text x="33" y="30" text-anchor="middle" class="mini-gauge-pct">${Math.round(pct)}%</text>
+        <text x="33" y="42" text-anchor="middle" class="mini-gauge-eta">${eta}</text>
+      </svg>
+      <span class="mini-gauge-label">${label}</span>
+    </div>`;
+  }).join('');
+}
+
+function formatMiniEta(ms, utilization) {
+  if (utilization >= 100) return 'FULL';
+  if (ms == null || ms <= 0) return '';
+  if (ms > 30 * 24 * 3600_000) return 'OK';
+  const h = Math.floor(ms / 3600_000);
+  const m = Math.floor((ms % 3600_000) / 60_000);
+  if (h >= 24) return `${Math.floor(h / 24)}d`;
+  if (h > 0) return `${h}h${m > 0 ? m : ''}`;
+  return `${m}m`;
 }
 
 // ── Boot ────────────────────────────────────────────────

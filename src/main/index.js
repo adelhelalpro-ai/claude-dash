@@ -93,6 +93,11 @@ function setupIPC() {
   ipcMain.handle('minimize-app', () => mainWindow?.minimize());
 
   ipcMain.handle('refresh-usage', () => usage.manualRefresh());
+
+  ipcMain.handle('resize-window', (_event, w, h) => {
+    if (!mainWindow) return;
+    mainWindow.setSize(w, h, true);
+  });
 }
 
 // ── Usage polling ─────────────────────────────────────────
