@@ -15,9 +15,9 @@
   --border-subtle: rgba(255, 255, 255, 0.07);
   --border-card: rgba(255, 255, 255, 0.09);
 
-  --text-primary: rgba(255, 255, 255, 0.92);
-  --text-secondary: rgba(255, 255, 255, 0.55);
-  --text-tertiary: rgba(255, 255, 255, 0.3);
+  --text-primary: rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.72);
+  --text-tertiary: rgba(255, 255, 255, 0.50);
 
   --accent: #8B5CF6;
   --accent-dim: rgba(139, 92, 246, 0.25);
@@ -41,7 +41,7 @@ html, body {
   overflow: hidden;
   background: transparent;
   font-family: var(--font);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   user-select: none;
@@ -164,7 +164,7 @@ html, body {
 }
 
 .login-title {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
   background: linear-gradient(135deg, #C4B5FD, #8B5CF6);
   -webkit-background-clip: text;
@@ -221,13 +221,13 @@ html, body {
 }
 
 .login-hint {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-tertiary);
   margin-top: 4px;
 }
 
 .login-hint-cmd {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-tertiary);
   margin-top: 2px;
 }
@@ -238,7 +238,7 @@ html, body {
   padding: 2px 8px;
   border-radius: 4px;
   font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .login-error {
@@ -271,7 +271,7 @@ html, body {
   border-radius: 50%;
   background: var(--accent-dim);
   color: var(--accent);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -292,7 +292,7 @@ html, body {
   background: none;
   border: none;
   color: var(--text-tertiary);
-  font-size: 11px;
+  font-size: 12px;
   font-family: var(--font);
   cursor: pointer;
   padding: 4px 8px;
@@ -371,7 +371,7 @@ html, body {
 }
 
 .limit-pct {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1;
@@ -380,7 +380,7 @@ html, body {
 /* ── Progress Bar ────────────────────────────────────── */
 
 .progress-track {
-  height: 5px;
+  height: 6px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 3px;
   overflow: hidden;
@@ -417,7 +417,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11.5px;
+  font-size: 13px;
 }
 
 .detail-icon {
@@ -452,7 +452,7 @@ html, body {
 
 .detail-value.rate {
   color: var(--text-tertiary);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 /* ── Pulse animation for critical ────────────────────── */
@@ -481,7 +481,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11.5px;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 
@@ -543,7 +543,7 @@ html, body {
 }
 
 .footer-status {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-tertiary);
 }
 
@@ -651,7 +651,7 @@ html, body {
 }
 
 .mini-gauge-label {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--text-tertiary);
   letter-spacing: 0.03em;
@@ -659,13 +659,13 @@ html, body {
 }
 
 .mini-gauge-pct {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   fill: var(--text-primary);
 }
 
 .mini-gauge-eta {
-  font-size: 7.5px;
+  font-size: 9px;
   fill: var(--text-tertiary);
 }
 
@@ -686,7 +686,7 @@ html, body {
 }
 
 .app.mini .title-text {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .app.mini .ctrl-btn {

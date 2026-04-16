@@ -35,8 +35,8 @@ let lastUsageData = null;
 
 const FULL_WIDTH = 360;
 const FULL_HEIGHT = 520;
-const MINI_WIDTH = 280;
-const MINI_HEIGHT = 120;
+const MINI_WIDTH = 300;
+const MINI_HEIGHT = 130;
 let animatedValues = {};
 
 // ── Init ────────────────────────────────────────────────
@@ -434,21 +434,21 @@ function renderMiniGauges(limits) {
     const label = MINI_LABELS[key];
     const eta = formatMiniEta(l.estimatedTimeToLimit, pct);
 
-    // SVG ring gauge: radius 28, stroke 5, circumference = 2*PI*28 ≈ 175.9
-    const R = 28;
+    // SVG ring gauge: radius 30, stroke 5
+    const R = 30;
     const STROKE = 5;
     const CIRC = 2 * Math.PI * R;
     const offset = CIRC * (1 - Math.min(pct, 100) / 100);
 
     return `<div class="mini-gauge" style="--gauge-color: ${color}40">
-      <svg width="66" height="66" viewBox="0 0 66 66">
-        <circle cx="33" cy="33" r="${R}" fill="none" class="mini-gauge-track" stroke-width="${STROKE}"/>
-        <circle cx="33" cy="33" r="${R}" fill="none" class="mini-gauge-fill"
+      <svg width="70" height="70" viewBox="0 0 70 70">
+        <circle cx="35" cy="35" r="${R}" fill="none" class="mini-gauge-track" stroke-width="${STROKE}"/>
+        <circle cx="35" cy="35" r="${R}" fill="none" class="mini-gauge-fill"
           stroke="${color}" stroke-width="${STROKE}"
           stroke-dasharray="${CIRC}" stroke-dashoffset="${offset}"
-          transform="rotate(-90 33 33)"/>
-        <text x="33" y="30" text-anchor="middle" class="mini-gauge-pct">${Math.round(pct)}%</text>
-        <text x="33" y="42" text-anchor="middle" class="mini-gauge-eta">${eta}</text>
+          transform="rotate(-90 35 35)"/>
+        <text x="35" y="32" text-anchor="middle" class="mini-gauge-pct">${Math.round(pct)}%</text>
+        <text x="35" y="45" text-anchor="middle" class="mini-gauge-eta">${eta}</text>
       </svg>
       <span class="mini-gauge-label">${label}</span>
     </div>`;
