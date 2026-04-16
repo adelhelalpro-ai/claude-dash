@@ -17,9 +17,9 @@
 </p>
 
 <p align="center">
-  <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/AdelHelal/claude-dash?style=flat-square&color=8B5CF6&label=latest" alt="Latest Release" /></a>
-  <a href="../../releases/latest"><img src="https://img.shields.io/github/downloads/AdelHelal/claude-dash/total?style=flat-square&color=22C55E&label=downloads" alt="Downloads" /></a>
-  <a href="../../actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/AdelHelal/claude-dash/ci.yml?style=flat-square&label=tests" alt="CI" /></a>
+  <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/adelhelalpro-ai/claude-dash?style=flat-square&color=8B5CF6&label=latest" alt="Latest Release" /></a>
+  <a href="../../releases/latest"><img src="https://img.shields.io/github/downloads/adelhelalpro-ai/claude-dash/total?style=flat-square&color=22C55E&label=downloads" alt="Downloads" /></a>
+  <a href="../../actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/adelhelalpro-ai/claude-dash/ci.yml?style=flat-square&label=tests" alt="CI" /></a>
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blueviolet?style=flat-square" alt="Platform" />
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="Zero deps" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License" /></a>
@@ -86,29 +86,38 @@ It shares tokens with Claude Code — both apps stay in sync. When you relaunch,
 **Real-time limit tracking**
 - 5-hour rolling window utilization
 - 7-day rolling window utilization
-- Model-specific limits (Opus, Sonnet) when applicable
-- Extra usage status and monthly cap
+- Model-specific limits (Opus, Sonnet, Cowork) when active on your plan
+- Extra usage status with monthly cap and spend tracking
 
-**Predictive ETA**
-- Estimates time until you hit each limit
-- Based on your consumption speed over the last 2 hours
-- Adapts automatically as your usage pattern changes
+**EWMA predictive engine**
+- Estimates time-to-limit using Exponential Weighted Moving Average (15min half-life)
+- Multi-horizon consensus: cross-checks rates over 10min, 30min, 1h, and 2h windows
+- Acceleration-aware: detects if you're ramping up and biases toward the faster rate
+- Confidence indicator: shows exact ETA (high), approximate ETA (medium), or "estimating..." (low)
+- Reset-aware: automatically discards data from before a rolling window boundary
+
+**Smart rate limit handling**
+- Polls every 5 minutes (the usage API allows ~5 requests per token before 429)
+- On 429: rotates the OAuth token (rate limit is per-token, new token = fresh counter)
+- Exponential backoff with 15min ceiling on repeated errors
+- Shares tokens bidirectionally with Claude Code — both apps stay in sync
 
 **Compact always-on-top widget**
 - 360 x 520px frameless floating window
 - Dark glassmorphism with native macOS vibrancy
-- Smooth number animations and color-coded progress bars
+- Smooth number animations and color-interpolated progress bars
 - Green to Yellow to Orange to Red as you approach limits
+- Critical state glow at 90%+ utilization
 
 **Native notifications**
-- macOS/Windows alerts at 80% and 95% thresholds
+- macOS/Windows/Linux alerts at 80% and 95% thresholds
 - De-duplicated per reset window (no spam)
 
 **Zero friction**
-- Auto-detects Claude Code credentials
-- Auto-refreshes expired tokens
+- Auto-detects Claude Code credentials on launch
+- Silently refreshes expired tokens (8h access / indefinite refresh)
 - Persists window position across restarts
-- No config files, no setup wizard
+- No config files, no API keys, no setup wizard
 
 ## Tech
 
@@ -126,7 +135,7 @@ It shares tokens with Claude Code — both apps stay in sync. When you relaunch,
 ## Build from source
 
 ```bash
-git clone https://github.com/AdelHelal/claude-dash.git
+git clone https://github.com/adelhelalpro-ai/claude-dash.git
 cd claude-dash
 npm install
 npm start            # Run in dev mode
