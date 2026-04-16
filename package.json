@@ -6,15 +6,35 @@
   "scripts": {
     "start": "electron .",
     "dev": "NODE_ENV=development electron .",
-    "dist": "electron-builder --mac",
-    "dist:universal": "electron-builder --mac --universal"
+    "test": "npx playwright test tests/e2e.spec.js",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AdelHelal/claude-dash.git"
+  },
+  "homepage": "https://github.com/AdelHelal/claude-dash",
+  "bugs": {
+    "url": "https://github.com/AdelHelal/claude-dash/issues"
+  },
+  "keywords": [
+    "claude",
+    "anthropic",
+    "usage",
+    "rate-limit",
+    "dashboard",
+    "electron",
+    "monitoring"
+  ],
+  "author": "Adel Helal <adel@orbitalis.tech> (https://www.orbitalis.tech)",
+  "license": "MIT",
   "devDependencies": {
     "@playwright/test": "^1.59.1",
     "electron": "^33.0.0",
     "electron-builder": "^26.8.1",
     "playwright": "^1.59.1"
-  },
-  "author": "Claude Dash",
-  "license": "MIT"
+  }
 }

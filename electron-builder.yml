@@ -10,6 +10,9 @@ files:
   - src/**/*
   - "!src/**/*.test.*"
   - "!tests/**"
+  - "!scripts/**"
+
+# ── macOS ──────────────────────────────────────────────
 
 mac:
   category: public.app-category.utilities
@@ -38,3 +41,48 @@ dmg:
       y: 180
       type: link
       path: /Applications
+
+# ── Windows ────────────────────────────────────────────
+
+win:
+  icon: assets/icon.png
+  target:
+    - target: nsis
+      arch:
+        - x64
+        - arm64
+
+nsis:
+  oneClick: true
+  perMachine: false
+  allowToChangeInstallationDirectory: false
+  installerIcon: assets/icon.png
+  uninstallerIcon: assets/icon.png
+  installerHeaderIcon: assets/icon.png
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Claude Dash
+
+# ── Linux ──────────────────────────────────────────────
+
+linux:
+  icon: assets/icon.png
+  category: Utility
+  target:
+    - target: AppImage
+      arch:
+        - x64
+        - arm64
+    - target: deb
+      arch:
+        - x64
+  desktop:
+    Name: Claude Dash
+    Comment: Monitor Claude usage limits in real-time
+    Terminal: false
+
+# ── Publish (GitHub Releases) ──────────────────────────
+
+publish:
+  provider: github
+  releaseType: release

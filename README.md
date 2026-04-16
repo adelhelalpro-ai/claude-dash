@@ -17,10 +17,12 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows-blueviolet?style=flat-square" alt="Platform" />
-  <img src="https://img.shields.io/badge/electron-33-blue?style=flat-square&logo=electron" alt="Electron" />
+  <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/AdelHelal/claude-dash?style=flat-square&color=8B5CF6&label=latest" alt="Latest Release" /></a>
+  <a href="../../releases/latest"><img src="https://img.shields.io/github/downloads/AdelHelal/claude-dash/total?style=flat-square&color=22C55E&label=downloads" alt="Downloads" /></a>
+  <a href="../../actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/AdelHelal/claude-dash/ci.yml?style=flat-square&label=tests" alt="CI" /></a>
+  <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blueviolet?style=flat-square" alt="Platform" />
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="Zero deps" />
-  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License" /></a>
 </p>
 
 ---
@@ -35,13 +37,41 @@ Zero runtime dependencies. Zero config. Just install and it picks up your Claude
 
 ## Install
 
-**Download the latest `.dmg`** from [Releases](../../releases), open it, drag to Applications. Done.
+Download the latest build for your platform:
 
-> Requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and logged in. The app reads your existing Claude session — no separate login needed.
+<table>
+  <tr>
+    <td align="center"><strong>macOS</strong></td>
+    <td align="center"><strong>Windows</strong></td>
+    <td align="center"><strong>Linux</strong></td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="../../releases/latest">
+        <img src="https://img.shields.io/badge/Download-.dmg-blue?style=for-the-badge&logo=apple&logoColor=white" alt="macOS DMG" />
+      </a>
+      <br/><sub>Universal (Intel + Apple Silicon)</sub>
+    </td>
+    <td align="center">
+      <a href="../../releases/latest">
+        <img src="https://img.shields.io/badge/Download-.exe-blue?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Installer" />
+      </a>
+      <br/><sub>x64 / ARM64</sub>
+    </td>
+    <td align="center">
+      <a href="../../releases/latest">
+        <img src="https://img.shields.io/badge/Download-.AppImage-blue?style=for-the-badge&logo=linux&logoColor=white" alt="Linux AppImage" />
+      </a>
+      <br/><sub>x64 / ARM64 &nbsp;·&nbsp; .deb also available</sub>
+    </td>
+  </tr>
+</table>
+
+> **Prerequisite:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and logged in. Claude Dash reads your existing session — no separate login needed.
 
 ## How it works
 
-Claude Dash reads the OAuth tokens that Claude Code stores locally (`~/.claude/.credentials.json`), refreshes them silently, and polls the usage API every 30 seconds.
+Claude Dash reads the OAuth tokens that Claude Code stores locally (`~/.claude/.credentials.json`), refreshes them silently, and polls the usage API every 5 minutes.
 
 ```
 Claude Code login → ~/.claude/.credentials.json → Claude Dash reads tokens
@@ -55,7 +85,7 @@ It shares tokens with Claude Code — both apps stay in sync. When you relaunch,
 
 **Real-time limit tracking**
 - 5-hour rolling window utilization
-- 7-day rolling window utilization  
+- 7-day rolling window utilization
 - Model-specific limits (Opus, Sonnet) when applicable
 - Extra usage status and monthly cap
 
@@ -65,10 +95,10 @@ It shares tokens with Claude Code — both apps stay in sync. When you relaunch,
 - Adapts automatically as your usage pattern changes
 
 **Compact always-on-top widget**
-- 360×520px frameless floating window
+- 360 x 520px frameless floating window
 - Dark glassmorphism with native macOS vibrancy
 - Smooth number animations and color-coded progress bars
-- Green → Yellow → Orange → Red as you approach limits
+- Green to Yellow to Orange to Red as you approach limits
 
 **Native notifications**
 - macOS/Windows alerts at 80% and 95% thresholds
@@ -88,9 +118,10 @@ It shares tokens with Claude Code — both apps stay in sync. When you relaunch,
 | **Framework** | Electron 33 |
 | **Renderer** | Vanilla HTML/CSS/JS |
 | **Auth** | OAuth 2.0 PKCE (shared with Claude Code) |
-| **Polling** | 30s interval, exponential backoff on errors |
+| **Polling** | 5min interval, smart backoff + token rotation on 429 |
 | **Storage** | Electron safeStorage (encrypted) |
 | **Tests** | 38 Playwright E2E tests |
+| **CI/CD** | GitHub Actions (macOS + Windows + Linux) |
 
 ## Build from source
 
@@ -98,11 +129,26 @@ It shares tokens with Claude Code — both apps stay in sync. When you relaunch,
 git clone https://github.com/AdelHelal/claude-dash.git
 cd claude-dash
 npm install
-npm start          # Run in dev mode
-npm run dist       # Build macOS DMG
+npm start            # Run in dev mode
+npm test             # Run 38 E2E tests
+npm run dist         # Build for current platform
 ```
 
-The DMG lands in `dist/Claude Dash-1.0.0-universal.dmg` (arm64 + x64).
+<details>
+<summary><strong>Platform-specific builds</strong></summary>
+
+```bash
+# macOS DMG (Universal: Intel + Apple Silicon)
+npx electron-builder --mac
+
+# Windows NSIS installer (x64 + ARM64)
+npx electron-builder --win
+
+# Linux AppImage + .deb (x64)
+npx electron-builder --linux
+```
+
+</details>
 
 ## Support this project
 
@@ -124,5 +170,5 @@ I build tools that solve real problems. If you need someone who ships fast and t
 ---
 
 <p align="center">
-  Built by <a href="https://www.orbitalis.tech">Adel Helal</a> &nbsp;·&nbsp; MIT License
+  Built by <a href="https://www.orbitalis.tech">Adel Helal</a> &nbsp;&middot;&nbsp; MIT License
 </p>
