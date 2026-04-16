@@ -68,18 +68,14 @@ nsis:
 linux:
   icon: assets/icon.png
   category: Utility
+  synopsis: Monitor Claude usage limits in real-time
   target:
     - target: AppImage
       arch:
         - x64
-        - arm64
     - target: deb
       arch:
         - x64
-  desktop:
-    Name: Claude Dash
-    Comment: Monitor Claude usage limits in real-time
-    Terminal: false
 
 # ── Publish (GitHub Releases) ──────────────────────────
 
