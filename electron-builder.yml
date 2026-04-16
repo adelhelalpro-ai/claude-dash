@@ -1,0 +1,40 @@
+appId: com.claudedash.app
+productName: Claude Dash
+copyright: Copyright © 2026 Claude Dash
+
+directories:
+  output: dist
+  buildResources: assets
+
+files:
+  - src/**/*
+  - "!src/**/*.test.*"
+  - "!tests/**"
+
+mac:
+  category: public.app-category.utilities
+  icon: assets/icon.icns
+  target:
+    - target: dmg
+      arch:
+        - universal
+  darkModeSupport: true
+  extendInfo:
+    NSAppTransportSecurity:
+      NSAllowsArbitraryLoads: true
+
+dmg:
+  background: assets/dmg-background.png
+  icon: assets/icon.icns
+  iconSize: 100
+  window:
+    width: 600
+    height: 400
+  contents:
+    - x: 170
+      y: 180
+      type: file
+    - x: 430
+      y: 180
+      type: link
+      path: /Applications
