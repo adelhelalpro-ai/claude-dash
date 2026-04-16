@@ -6,6 +6,7 @@ const { UsageTracker } = require('./usage');
 
 let mainWindow = null;
 let store, auth, usage;
+const skipAutoAuth = process.env.CLAUDE_DASH_SKIP_AUTO_AUTH === '1';
 
 // ── Window ────────────────────────────────────────────────
 
@@ -66,8 +67,8 @@ function createWindow() {
 
 function setupIPC() {
   ipcMain.handle('get-auth-status', () => ({
-    authenticated: auth.isAuthenticated(),
-    account: auth.getAccount(),
+    authenticated: skipAutoAuth ? false : auth.isAuthenticated(),
+    account: skipAutoAuth ? null : auth.getAccount(),
   }));
 
   ipcMain.handle('start-auth', async () => {
@@ -120,7 +121,7 @@ app.whenReady().then(async () => {
   setupIPC();
 
   // Try to silently reconnect with stored tokens
-  const valid = await auth.ensureValidToken();
+  const valid = skipAutoAuth ? false : await auth.ensureValidToken();
   if (valid) {
     const sendAuthAndStartPolling = () => {
       mainWindow.webContents.send('auth-status', {

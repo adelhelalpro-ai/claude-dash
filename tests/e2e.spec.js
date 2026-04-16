@@ -13,7 +13,7 @@ let win;
 test.beforeAll(async () => {
   app = await electron.launch({
     args: [MAIN_ENTRY],
-    env: { ...process.env, NODE_ENV: 'test' },
+    env: { ...process.env, NODE_ENV: 'test', CLAUDE_DASH_SKIP_AUTO_AUTH: '1' },
   });
   win = await app.firstWindow();
   // Wait for DOM to be ready

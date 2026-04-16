@@ -9,6 +9,8 @@ const LIMIT_LABELS = {
   five_hour: '5-Hour',
   seven_day: '7-Day',
   seven_day_opus: 'Opus 7-Day',
+  seven_day_sonnet: 'Sonnet 7-Day',
+  seven_day_cowork: 'Cowork 7-Day',
 };
 
 class UsageTracker {
@@ -82,6 +84,7 @@ class UsageTracker {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'anthropic-beta': 'oauth-2025-04-20',
+            'User-Agent': 'claude-code/2.1',
           },
         },
         (res) => {
@@ -110,7 +113,7 @@ class UsageTracker {
     const now = Date.now();
     const result = { timestamp: now, limits: {}, extra_usage: raw.extra_usage };
 
-    for (const key of ['five_hour', 'seven_day', 'seven_day_opus']) {
+    for (const key of ['five_hour', 'seven_day', 'seven_day_opus', 'seven_day_sonnet', 'seven_day_cowork']) {
       const limit = raw[key];
       if (!limit) continue;
 
