@@ -160,7 +160,7 @@ function renderUsage(data) {
   }
 
   // Render / update each limit card
-  const order = ['five_hour', 'seven_day', 'seven_day_opus'];
+  const order = ['five_hour', 'seven_day', 'seven_day_opus', 'seven_day_sonnet', 'seven_day_cowork'];
   for (const key of order) {
     const limit = limits[key];
     if (!limit) {
@@ -194,6 +194,8 @@ const LABELS = {
   five_hour: '5-Hour Limit',
   seven_day: '7-Day Limit',
   seven_day_opus: 'Opus 7-Day Limit',
+  seven_day_sonnet: 'Sonnet 7-Day Limit',
+  seven_day_cowork: 'Cowork 7-Day Limit',
 };
 
 const ICONS = {
@@ -258,9 +260,9 @@ function upsertCard(key, limit) {
   // Reset time
   card.querySelector('[data-reset]').textContent = formatDuration(limit.timeToReset);
 
-  // Estimation
+  // Estimation with confidence indicator
   const etaEl = card.querySelector('[data-eta]');
-  etaEl.textContent = formatEstimation(limit.estimatedTimeToLimit, to);
+  etaEl.textContent = formatEstimation(limit.estimatedTimeToLimit, to, limit.confidence);
 
   // Rate
   const rateEl = card.querySelector('[data-rate]');
@@ -344,12 +346,16 @@ function formatDuration(ms) {
   return `${m}m`;
 }
 
-function formatEstimation(ms, utilization) {
+function formatEstimation(ms, utilization, confidence) {
   if (utilization >= 100) return 'Limit reached';
   if (ms === 0) return 'Limit reached';
-  if (ms == null) return 'Collecting data...';
+  if (ms == null || confidence === 'none') return 'Collecting data...';
   if (ms > 30 * 24 * 3600_000) return 'Safe pace';
-  return `~${formatDuration(ms)} at current pace`;
+
+  const time = formatDuration(ms);
+  if (confidence === 'high')   return `${time} at current pace`;
+  if (confidence === 'medium') return `~${time} at current pace`;
+  return `~${time} (estimating...)`;
 }
 
 function formatAgo(timestamp) {

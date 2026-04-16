@@ -133,66 +133,181 @@ class UsageTracker {
       const resetsAt = new Date(limit.resets_at).getTime();
       const timeToReset = Math.max(0, resetsAt - now);
 
+      const prediction = this._predict(key, limit.utilization);
+
       result.limits[key] = {
         utilization: limit.utilization,
         resets_at: limit.resets_at,
         timeToReset,
-        estimatedTimeToLimit: this._estimateTimeToLimit(key, limit.utilization),
-        consumptionRate: this._getRate(key),
+        estimatedTimeToLimit: prediction.eta,
+        consumptionRate: prediction.rate,
+        confidence: prediction.confidence,
       };
     }
 
     return result;
   }
 
-  // --- Prediction ---
+  // ── Prediction Engine ─────────────────────────────────
+  //
+  // Instead of a naive fixed-window linear projection, we use:
+  //
+  // 1. Reset-aware segmentation — only use data after the last utilization
+  //    drop (rolling window reset).
+  //
+  // 2. EWMA (Exponential Weighted Moving Average) — recent samples weigh
+  //    more than old ones via an exponential decay with configurable
+  //    half-life. Naturally adapts to changing consumption patterns.
+  //
+  // 3. Multi-horizon consensus — compute rates over 10min, 30min, 1h, and
+  //    2h windows. When they agree, confidence is high. When the short
+  //    window diverges from the long one, the user is accelerating or
+  //    decelerating and we adapt the estimate.
+  //
+  // 4. Acceleration-aware blending — if the short-term rate is
+  //    significantly higher than the long-term rate, the user is ramping
+  //    up and we bias toward the faster rate (conservative ETA). If they
+  //    are slowing down, we blend toward the slower rate.
+  //
+  // 5. Confidence signal — returned to the UI so it can display "~" for
+  //    medium confidence or "estimating…" for low confidence.
 
-  _estimateTimeToLimit(key, currentUtil) {
-    if (currentUtil >= 100) return 0;
-    if (currentUtil === 0) return null;
+  _predict(key, currentUtil) {
+    if (currentUtil >= 100) return { eta: 0, rate: null, confidence: 'high' };
 
-    const twoHoursAgo = Date.now() - 2 * 3600_000;
-    let window = this.history.filter((h) => h.limits?.[key]?.utilization != null && h.timestamp > twoHoursAgo);
-    if (window.length < 2) {
-      window = this.history.filter((h) => h.limits?.[key]?.utilization != null);
+    const segment = this._getSegment(key);
+    if (segment.length < 2) return { eta: null, rate: null, confidence: 'none' };
+
+    // Compute rates at multiple horizons
+    const rates = {
+      short:  this._windowRate(segment, key, 10 * 60_000),   // 10 min
+      medium: this._windowRate(segment, key, 30 * 60_000),   // 30 min
+      long:   this._windowRate(segment, key, 60 * 60_000),   // 1 h
+      full:   this._windowRate(segment, key, 2 * 3600_000),  // 2 h
+      ewma:   this._ewmaRate(segment, key, 15 * 60_000),     // 15 min half-life
+    };
+
+    // Pick the best rate and assess confidence
+    const { rate, confidence } = this._selectRate(rates, segment, key);
+
+    if (rate == null || rate <= 0 || currentUtil === 0) {
+      return { eta: null, rate: this._toPerHour(rate), confidence: 'none' };
     }
-    if (window.length < 2) return null;
 
-    // Find the longest monotonically-increasing run ending at the newest point.
-    // If utilization drops (window reset), only use data after the drop.
+    const eta = (100 - currentUtil) / rate; // ms until 100%
+    return { eta, rate: this._toPerHour(rate), confidence };
+  }
+
+  /** Extract the monotonically-increasing segment since the last reset. */
+  _getSegment(key) {
+    const all = this.history.filter((h) => h.limits?.[key]?.utilization != null);
+    if (all.length < 2) return all;
+
     let startIdx = 0;
-    for (let i = window.length - 1; i > 0; i--) {
-      if (window[i].limits[key].utilization < window[i - 1].limits[key].utilization) {
+    for (let i = all.length - 1; i > 0; i--) {
+      if (all[i].limits[key].utilization < all[i - 1].limits[key].utilization) {
         startIdx = i;
         break;
       }
     }
-    const segment = window.slice(startIdx);
-    if (segment.length < 2) return null;
-
-    const oldest = segment[0];
-    const newest = segment[segment.length - 1];
-    const dt = newest.timestamp - oldest.timestamp;
-    const du = newest.limits[key].utilization - oldest.limits[key].utilization;
-
-    if (du <= 0 || dt < 30_000) return null;
-
-    const ratePerMs = du / dt;
-    return (100 - currentUtil) / ratePerMs;
+    return all.slice(startIdx);
   }
 
-  _getRate(key) {
-    const oneHourAgo = Date.now() - 3600_000;
-    const recent = this.history.filter((h) => h.limits?.[key]?.utilization != null && h.timestamp > oneHourAgo);
-    if (recent.length < 2) return null;
+  /** Simple rate over the most recent `windowMs` of a segment (%/ms). */
+  _windowRate(segment, key, windowMs) {
+    const now = Date.now();
+    const windowed = segment.filter((h) => h.timestamp > now - windowMs);
+    if (windowed.length < 2) return null;
 
-    const oldest = recent[0];
-    const newest = recent[recent.length - 1];
-    const dt = newest.timestamp - oldest.timestamp;
-    const du = newest.limits[key].utilization - oldest.limits[key].utilization;
-    if (dt < 30_000) return null;
+    const first = windowed[0];
+    const last = windowed[windowed.length - 1];
+    const dt = last.timestamp - first.timestamp;
+    const du = last.limits[key].utilization - first.limits[key].utilization;
+    if (dt < 30_000 || du < 0) return null;
+    return du / dt;
+  }
 
-    return (du / dt) * 3600_000; // %/hour
+  /**
+   * EWMA rate — weights each inter-sample rate by exp(-lambda * age).
+   * Half-life controls how quickly old data fades.
+   * Returns %/ms.
+   */
+  _ewmaRate(segment, key, halfLifeMs) {
+    if (segment.length < 2) return null;
+    const now = Date.now();
+    const lambda = Math.LN2 / halfLifeMs;
+
+    let weightedRateSum = 0;
+    let totalWeight = 0;
+
+    for (let i = 1; i < segment.length; i++) {
+      const dt = segment[i].timestamp - segment[i - 1].timestamp;
+      const du = segment[i].limits[key].utilization - segment[i - 1].limits[key].utilization;
+      if (dt < 10_000 || du < 0) continue; // skip noise / resets
+
+      const midAge = now - (segment[i].timestamp + segment[i - 1].timestamp) / 2;
+      const weight = Math.exp(-lambda * midAge);
+      weightedRateSum += (du / dt) * weight;
+      totalWeight += weight;
+    }
+
+    return totalWeight > 0 ? weightedRateSum / totalWeight : null;
+  }
+
+  /**
+   * Select the best rate from multi-horizon candidates and compute a
+   * confidence level based on how well they agree.
+   */
+  _selectRate(rates, segment, key) {
+    const valid = Object.entries(rates)
+      .filter(([, r]) => r != null && r > 0)
+      .map(([name, r]) => ({ name, r }));
+
+    if (valid.length === 0) return { rate: null, confidence: 'none' };
+    if (valid.length === 1) return { rate: valid[0].r, confidence: 'low' };
+
+    // Mean and coefficient of variation (CV) of all valid rates
+    const mean = valid.reduce((s, v) => s + v.r, 0) / valid.length;
+    const variance = valid.reduce((s, v) => s + (v.r - mean) ** 2, 0) / valid.length;
+    const cv = Math.sqrt(variance) / (mean || 1);
+
+    // Acceleration detection: compare short-term to long-term
+    const shortRate = rates.short ?? rates.medium;
+    const longRate = rates.full ?? rates.long;
+
+    let bestRate;
+    if (rates.ewma != null) {
+      bestRate = rates.ewma; // EWMA as default primary
+    } else {
+      bestRate = mean;
+    }
+
+    // If the user is accelerating (short >> long), bias toward the faster
+    // rate for a conservative (earlier) ETA.
+    if (shortRate != null && longRate != null && longRate > 0) {
+      const accelRatio = shortRate / longRate;
+      if (accelRatio > 1.5) {
+        // Accelerating: blend 70% short, 30% EWMA
+        bestRate = shortRate * 0.7 + bestRate * 0.3;
+      } else if (accelRatio < 0.5) {
+        // Decelerating: blend 70% EWMA (already includes recent slowdown)
+        bestRate = bestRate * 0.7 + longRate * 0.3;
+      }
+    }
+
+    // Confidence based on:
+    // - Number of data points in the segment
+    // - Agreement across horizons (low CV = high agreement)
+    const confidence = (valid.length >= 3 && cv < 0.3 && segment.length >= 5)  ? 'high'
+                     : (valid.length >= 2 && cv < 0.6 && segment.length >= 3)  ? 'medium'
+                     : 'low';
+
+    return { rate: bestRate, confidence };
+  }
+
+  /** Convert rate from %/ms to %/hour for display. */
+  _toPerHour(ratePerMs) {
+    return ratePerMs != null ? ratePerMs * 3600_000 : null;
   }
 
   // --- History ---
