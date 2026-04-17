@@ -223,11 +223,8 @@ test('progress bar reflects utilization percentage', async () => {
 });
 
 test('percentage text animates to correct value', async () => {
-  // Wait for animation to complete (800ms + margin)
-  await win.waitForTimeout(WAIT);
-  const pctText = await win.locator('#card-five_hour [data-pct]').textContent();
-  // Should end at 42.5%
-  expect(pctText).toBe('42.5%');
+  // Auto-retrying assertion: waits up to expect.timeout for animation to finish
+  await expect(win.locator('#card-five_hour [data-pct]')).toHaveText('42.5%');
 });
 
 test('reset time is displayed', async () => {
@@ -305,9 +302,7 @@ test('card gets critical class at 90%+', async () => {
 });
 
 test('percentage text updates to 95% after animation', async () => {
-  await win.waitForTimeout(WAIT);
-  const pctText = await win.locator('#card-five_hour [data-pct]').textContent();
-  expect(pctText).toBe('95.0%');
+  await expect(win.locator('#card-five_hour [data-pct]')).toHaveText('95.0%');
 });
 
 test('progress bar color shifts toward red at high utilization', async () => {
@@ -345,9 +340,7 @@ test('shows "Limit reached" at 100% utilization', async () => {
     });
   }, { now });
 
-  await win.waitForTimeout(WAIT);
-  const etaText = await win.locator('#card-five_hour [data-eta]').textContent();
-  expect(etaText).toBe('Limit reached');
+  await expect(win.locator('#card-five_hour [data-eta]')).toHaveText('Limit reached');
 });
 
 // ── 8. Card Removal ────────────────────────────────────
